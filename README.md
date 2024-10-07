@@ -1,11 +1,11 @@
-# qusal
+# qujourno
 
-Salt Formulas for Qubes OS.
+Salt Formulas for journalists using Qubes OS.
 
 ## Warning
 
 **Warning**: Not ready for production, development only. Breaking changes can
-and will be introduced in the meantime. You've been warned.
+and will be introduced in the meantime. This is a downstream project in Alpha and under intense revision. You've been warned.
 
 ## Table of Contents
 
@@ -23,27 +23,9 @@ and will be introduced in the meantime. You've been warned.
 
 ## Description
 
-Qusal is a Free and Open Source security-focused project that provides
+Qujourno is a fork of `qusal`, a Free and Open Source security-focused project that provides
 SaltStack Formulas for [Qubes OS](https://www.qubes-os.org) users to complete
-various daily tasks, such as web browsing, video-calls, remote administration,
-coding, network tunnels and much more, which are easy to install and maintains
-low attack surface.
-
-We not only provide a single solution for each project, but also provides
-alternative when they differ, such as for networking, you could use a VPN, DNS
-Sink-hole, Mirage Unikernel or the standard Qubes Firewall for managing the
-network chain and the connections the clients connected to these NetVMs are
-allowed to make.
-
-Here are some of the Global Preferences we can manage:
-
-*   **clockvm**: disp-sys-net, sys-net
-*   **default_audiovm**: disp-sys-audio
-*   **default_dispvm**: dvm-reader
-*   **default_guivm**: sys-gui, sys-gui-vnc, sys-gui-gpu
-*   **default_netvm**: sys-pihole, sys-firewall or disp-sys-firewall
-*   **management_dispvm**: dvm-mgmt
-*   **updatevm**: sys-pihole, sys-firewall or disp-sys-firewall
+various daily tasks specifically for journalists as a one-stop install. Those configurations include, Proton Mail, Signal, WhatsApp and Telegram, among other tools, provided in a single RPM that can be installed after a fresh install. All you need are your login credentials and you'll be ready to start "thinking with Qubes."
 
 ## Installation
 
