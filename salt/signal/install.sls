@@ -1,5 +1,5 @@
 {#
-SPDX-FileCopyrightText: 2023 - 2024 Benjamin Grande M. S. <ben.grande.b@gmail.com>
+SPDX-FileCopyrightText: 2023 - 2025 Benjamin Grande M. S. <ben.grande.b@gmail.com>
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -7,8 +7,9 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 {% if grains['nodename'] != 'dom0' -%}
 
 include:
-  - .install-repo
+  - {{ slsdotpath }}.install-repo
   - utils.tools.common.update
+  - utils.tools.xfce
   - dotfiles.copy-x11
   - sys-audio.install-client
 

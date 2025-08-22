@@ -1,5 +1,5 @@
 {#
-SPDX-FileCopyrightText: 2023 - 2024 Benjamin Grande M. S. <ben.grande.b@gmail.com>
+SPDX-FileCopyrightText: 2023 - 2025 Benjamin Grande M. S. <ben.grande.b@gmail.com>
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -20,5 +20,20 @@ include:
     - user: user
     - group: user
     - makedirs: True
+
+{%- set qusal_dot = salt["pillar.get"]("qusal:dotfiles:all", default=True) -%}
+{%- if salt["pillar.get"]("qusal:dotfiles:mutt", default=qusal_dot) -%}
+
+"{{ slsdotpath }}-reader-mutt-offline":
+  file.symlink:
+    - require:
+      - sls: dotfiles.copy-mutt
+    - name: /home/user/.config/mutt/90_offline.muttrc
+    - target: /home/user/.config/mutt/sample/offline.muttrc.example
+    - user: user
+    - group: user
+    - force: True
+
+{% endif -%}
 
 {% endif -%}

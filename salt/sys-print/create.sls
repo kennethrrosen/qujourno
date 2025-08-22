@@ -8,7 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 {%- from "qvm/template.jinja" import load -%}
 
 include:
-  - .clone
+  - {{ slsdotpath }}.clone
 
 {% load_yaml as defaults -%}
 name: tpl-{{ slsdotpath }}
@@ -35,7 +35,7 @@ present:
 prefs:
 - template: tpl-{{ slsdotpath }}
 - label: red
-- netvm: "*default*"
+- netvm: ""
 - audiovm: ""
 - vcpus: 1
 - memory: 300
@@ -46,6 +46,7 @@ prefs:
 features:
 - enable:
   - servicevm
+  - service.avahi
   - service.cups
   - appmenus-dispvm
 - disable:
@@ -70,7 +71,7 @@ present:
 prefs:
 - template: dvm-{{ slsdotpath }}
 - label: red
-- netvm: "*default*"
+- netvm: ""
 - audiovm: ""
 - vcpus: 1
 - memory: 300
@@ -105,7 +106,7 @@ present:
 prefs:
 - template: tpl-{{ slsdotpath }}
 - label: red
-- netvm: "*default*"
+- netvm: ""
 - audiovm: ""
 - vcpus: 1
 - memory: 300
@@ -115,6 +116,7 @@ prefs:
 features:
 - enable:
   - servicevm
+  - service.avahi
   - service.cups
 - disable:
   - service.cups-browsed

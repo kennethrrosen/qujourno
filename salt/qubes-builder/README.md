@@ -32,25 +32,14 @@ Qubes Executor lacking some dependencies on Debian such as
 builder qube was Debian based, the executor qube still needs to be a Fedora
 template.
 
-<!-- TODO: remove after 1 month: 2024-08-4 -->
-If installation fails on non existent qubes-infrastructure-mirrors directory
-during the `qubes-builder.configure` state, please
-[manually pull new commits](#Pulling new commits) and then run the state
-again. This issue will occur to everyone that ran the same state before
-`2024-07-01`, due to [submodule addition](https://github.com/QubesOS/qubes-builderv2/commit/bc6d9a9954d985d2be3ec76ce86d44fea13d345b).
-Qusal maintainer decision is not to handle such issue automatically as it
-can lead to data loss in case user does manual changes, the installation would
-need to `reset` the user changes and to do a clean `pull` that wouldn't fail.
-After you've pulled the commit including the `.gitmodules` once, future
-installations won't have this issue.
-
 *   Top:
 
 ```sh
-sudo qubesctl top.enable qubes-builder
+sudo qubesctl top.enable mgmt qubes-builder
+sudo qubesctl --targets=tpl-mgmt state.apply
+sudo qubesctl state.apply qubes-builder.prefs-mgmt
 sudo qubesctl --targets=tpl-qubes-builder,dvm-qubes-builder,qubes-builder state.apply
-sudo qubesctl top.disable qubes-builder
-sudo qubesctl state.apply qubes-builder.prefs
+sudo qubesctl top.disable mgmt qubes-builder
 ```
 
 *   State:
@@ -59,8 +48,9 @@ sudo qubesctl state.apply qubes-builder.prefs
 
 ```sh
 sudo qubesctl state.apply qubes-builder.create
+sudo qubesctl --skip-dom0 --targets=tpl-mgmt state.apply mgmt.install
+sudo qubesctl state.apply qubes-builder.prefs-mgmt
 sudo qubesctl --skip-dom0 --targets=tpl-qubes-builder state.apply qubes-builder.install
-sudo qubesctl state.apply qubes-builder.prefs
 sudo qubesctl --skip-dom0 --targets=dvm-qubes-builder state.apply qubes-builder.configure-qubes-executor
 sudo qubesctl --skip-dom0 --targets=qubes-builder state.apply qubes-builder.configure
 ```
@@ -93,12 +83,13 @@ unattended build.
 
 The installation will clone the repository but not pull new commits. You will
 need to pull new commits from time to time, their signature will be
-automatically verified before merging them to your git index.
+automatically verified them being merged to your git index.
 
 Pull `qubes-builderv2` commits:
 
 ```sh
-git pull
+cd ~/src/qubes-builderv2
+git pull --verify-signatures
 ```
 
 Initialize and merge submodules:

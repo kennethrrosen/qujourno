@@ -1,5 +1,5 @@
 {#
-SPDX-FileCopyrightText: 2023 - 2024 Benjamin Grande M. S. <ben.grande.b@gmail.com>
+SPDX-FileCopyrightText: 2023 - 2025 Benjamin Grande M. S. <ben.grande.b@gmail.com>
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -13,15 +13,6 @@ include:
   - dotfiles.copy-sh
   - dotfiles.copy-ssh
   - dotfiles.copy-git
-
-"{{ slsdotpath }}-opam-completion-and-hooks":
-  file.managed:
-    - name: /home/user/.config/sh/profile.d/opam.sh
-    - source: salt://{{ slsdotpath }}/files/client/profile/opam.sh
-    - mode: '0755'
-    - user: user
-    - group: user
-    - makedirs: True
 
 "{{ slsdotpath }}-makedir-src":
   file.directory:
@@ -55,10 +46,9 @@ include:
   cmd.run:
     - require:
       - file: "{{ slsdotpath }}-save-keys"
-    - name: gpg --status-fd=2 --homedir . --import download/*.asc
+    - name: gpg --homedir . --import download/*.asc
     - cwd: /home/user/.gnupg/mirage-firewall
     - runas: user
-    - success_stderr: IMPORT_OK
 
 "{{ slsdotpath }}-import-ownertrust":
   cmd.run:
@@ -80,7 +70,9 @@ include:
   cmd.run:
     - require:
       - git: "{{ slsdotpath }}-git-clone"
-    - name: GNUPGHOME="$HOME/.gnupg/mirage-firewall" git -c gpg.program=gpg2 verify-commit {{ mirage_firewall_tag }}
+    - env:
+      - GNUPGHOME: "/home/user/.gnupg/mirage-firewall"
+    - name: git -c gpg.program=gpg2 verify-commit {{ mirage_firewall_tag }}
     - cwd: /home/user/src/qubes-mirage-firewall
     - runas: user
 

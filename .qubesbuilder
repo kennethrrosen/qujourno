@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Benjamin Grande M. S. <ben.grande.b@gmail.com>
+# SPDX-FileCopyrightText: 2024 - 2025 Benjamin Grande M. S. <ben.grande.b@gmail.com>
 #
 # SPDX-License-Identifier: MIT
 # vim: ft=yaml
@@ -21,7 +21,6 @@ host:
       - rpm_spec/qusal-fedora-minimal.spec
       - rpm_spec/qusal-fedora-xfce.spec
       - rpm_spec/qusal-fetcher.spec
-      - rpm_spec/qusal-grafana.spec
       - rpm_spec/qusal-kicksecure-minimal.spec
       - rpm_spec/qusal-mail.spec
       - rpm_spec/qusal-media.spec

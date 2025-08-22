@@ -1,21 +1,21 @@
 {#
 SPDX-FileCopyrightText: 2022 Thien Tran <contact@tommytran.io>
 SPDX-FileCopyrightText: 2023 unman <unman@thirdeyesecurity.org>
-SPDX-FileCopyrightText: 2023 - 2024 Benjamin Grande M. S. <ben.grande.b@gmail.com>
+SPDX-FileCopyrightText: 2023 - 2025 Benjamin Grande M. S. <ben.grande.b@gmail.com>
 
 SPDX-License-Identifier: MIT
 #}
 
 {%- from "qvm/template.jinja" import load -%}
 
-{% set mirage_version = 'v0.9.1' -%}
-{% set mirage_file_archive = 'mirage-firewall.tar.bz2' -%}
-{% set mirage_url_archive = 'https://github.com/mirage/qubes-mirage-firewall/releases/download/' ~ mirage_version ~ '/' ~ mirage_file_archive -%}
-{% set mirage_sha256sum = 'ea876bc7525811a16b0dfebe7ee1e91661eeecf67d240298d4ffd31b6ee41843' %}
+{% set mirage_version = 'v0.9.4' -%}
+{% set mirage_sha256sum = '0c3c2c0e62a834112c69d7cddc5dd6f70ecb93afa988768fb860ed26e423b1f8' %}
+{% set mirage_file_kernel = 'qubes-firewall.xen' -%}
+{% set mirage_url_kernel = 'https://github.com/mirage/qubes-mirage-firewall/releases/download/' ~ mirage_version ~ '/' ~ mirage_file_kernel -%}
 
 {# Use the netvm of the default_netvm. #}
-{% set default_netvm = salt['cmd.shell']('qubes-prefs default_netvm') -%}
-{% set netvm = salt['cmd.shell']('qvm-prefs ' + default_netvm + ' netvm') -%}
+{% set default_netvm = salt['cmd.shell']('qubes-prefs -- default_netvm') -%}
+{% set netvm = salt['cmd.shell']('qvm-prefs -- ' + default_netvm + ' netvm') -%}
 {#
 If netvm of default_netvm is empty, user's default_netvm is the first in
 the chain (sys-net).
@@ -25,18 +25,18 @@ the chain (sys-net).
 {% endif %}
 
 {# The 'updatevm' has networking and 'curl' present. #}
-{% set updatevm = salt['cmd.shell']('qubes-prefs updatevm') %}
+{% set updatevm = salt['cmd.shell']('qubes-prefs -- updatevm') %}
 
 "sys-mirage-firewall-start-updatevm-{{ updatevm }}":
   qvm.start:
     - name: {{ updatevm }}
 
-"sys-mirage-firewall-fetch-tarball":
+"sys-mirage-firewall-fetch-kernel":
   cmd.run:
     - require:
       - qvm: "sys-mirage-firewall-start-updatevm-{{ updatevm }}"
     - name: |
-        qvm-run {{ updatevm }} -- "
+        qvm-run --no-gui -- {{ updatevm }} "
           mkdir -p -- /tmp/mirage-firewall-download
           cd /tmp/mirage-firewall-download
           curl --location \
@@ -44,46 +44,52 @@ the chain (sys-net).
             --tlsv1.3 --proto =https \
             --fail --fail-early \
             --no-progress-meter --silent --show-error \
-            --remote-name {{ mirage_url_archive }}"
+            --remote-name {{ mirage_url_kernel }}"
     - timeout: 30
-    - runas: user
 
-{# Tarball is brought to dom0 instead of just 'vmlinuz' because:
-  - checksum on releases is only of the tarball, not of individual files;
-  - updatevm may not have 'bzip2' and 'tar';
-  - if we don't trust the provided tarball, we shouldn't even download it.
-#}
-"sys-mirage-firewall-bring-tarball-to-dom0":
+"sys-mirage-firewall-create-temporary-kernel-directory":
+  file.directory:
+    - require:
+      - cmd: "sys-mirage-firewall-fetch-kernel"
+    - name: /tmp/mirage-firewall-download
+    - user: root
+    - group: root
+    - mode: '0700'
+    - makedirs: True
+
+"sys-mirage-firewall-bring-kernel-to-dom0":
   cmd.run:
     - require:
-      - cmd: "sys-mirage-firewall-fetch-tarball"
-    - name:
-        qvm-run --pass-io {{ updatevm }} -- "cat /tmp/mirage-firewall-download/mirage-firewall.tar.bz2" | tee -- /tmp/mirage-firewall.tar.bz2 >/dev/null
-    - runas: user
+      - file: "sys-mirage-firewall-create-temporary-kernel-directory"
+    - name: |
+        qvm-run --no-gui --pass-io -- {{ updatevm }} \
+          "cat -- /tmp/mirage-firewall-download/qubes-firewall.xen" | \
+          tee -- /tmp/mirage-firewall-download/vmlinuz >/dev/null
     - timeout: 10
 
-"{{ slsdotpath }}-remove-tarball-from-updatevm":
+"sys-mirage-firewall-remove-kernel-from-updatevm":
   cmd.run:
-    - name: qvm-run {{ updatevm }} -- "rm -rf /tmp/mirage-firewall-download"
+    - name: qvm-run --no-gui -- {{ updatevm }} "rm -rf -- /tmp/mirage-firewall-download"
 
-"sys-mirage-firewall-extract-to-vm-kernels":
-  archive.extracted:
+"sys-mirage-firewall-move-kernel-to-usable-directory":
+  file.managed:
     - require:
-      - cmd: "sys-mirage-firewall-bring-tarball-to-dom0"
-    - name: /var/lib/qubes/vm-kernels/
-    - source: /tmp/mirage-firewall.tar.bz2
+      - cmd: "sys-mirage-firewall-bring-kernel-to-dom0"
+    - name: /var/lib/qubes/vm-kernels/mirage-firewall/vmlinuz
+    - source: /tmp/mirage-firewall-download/vmlinuz
     - source_hash: sha256={{ mirage_sha256sum }}
-    - archive_format: tar
-    - options: -j
+    - user: root
+    - group: root
+    - mode: '0644'
 
-"{{ slsdotpath }}-dom0-archive":
+"sys-mirage-firewall-remove-temporary-kernel":
   file.absent:
-    - name: /tmp/mirage-firewall.tar.bz2
+    - name: /tmp/mirage-firewall-download
 
 "sys-mirage-firewall-save-version":
   file.managed:
     - require:
-      - archive: "sys-mirage-firewall-extract-to-vm-kernels"
+      - file: "sys-mirage-firewall-move-kernel-to-usable-directory"
     - name: /var/lib/qubes/vm-kernels/mirage-firewall/version.txt
     - contents: {{ mirage_version }}
     - mode: '0644'
@@ -109,6 +115,9 @@ prefs:
 - kernel: mirage-firewall
 - kernelopts: ""
 - include_in_backups: False
+features:
+- enable:
+  - skip-update
 {%- endload %}
 {{ load(defaults) }}
 

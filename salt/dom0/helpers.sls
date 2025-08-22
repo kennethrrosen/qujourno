@@ -1,10 +1,19 @@
 {#
-SPDX-FileCopyrightText: 2024 Benjamin Grande M. S. <ben.grande.b@gmail.com>
+SPDX-FileCopyrightText: 2024 - 2025 Benjamin Grande M. S. <ben.grande.b@gmail.com>
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
 
 {% if grains['nodename'] == 'dom0' -%}
+
+"{{ slsdotpath }}-shell-helper":
+  file.managed:
+    - name: /usr/local/bin/qvm-shell
+    - source: salt://{{ slsdotpath }}/files/bin/qvm-shell
+    - mode: "0755"
+    - user: root
+    - group: root
+    - makedirs: True
 
 "{{ slsdotpath }}-terminal-helper":
   file.managed:
@@ -39,6 +48,15 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   file.managed:
     - name: /usr/local/bin/qvm-mgmt
     - source: salt://{{ slsdotpath }}/files/bin/qvm-mgmt
+    - mode: "0755"
+    - user: root
+    - group: root
+    - makedirs: True
+
+"{{ slsdotpath }}-qubes-gui-resolution-helper":
+  file.managed:
+    - name: /usr/local/bin/qubes-gui-resolution
+    - source: salt://{{ slsdotpath }}/files/bin/qubes-gui-resolution
     - mode: "0755"
     - user: root
     - group: root

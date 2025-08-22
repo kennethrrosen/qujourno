@@ -1,5 +1,5 @@
 # yamllint disable-line rule:line-length
-# SPDX-FileCopyrightText: 2023 - 2024 Benjamin Grande M. S. <ben.grande.b@gmail.com>
+# SPDX-FileCopyrightText: 2023 - 2025 Benjamin Grande M. S. <ben.grande.b@gmail.com>
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -49,24 +49,49 @@ jobs:
         env:
           SPEC_VENDOR: Ben Grande
           SPEC_PACKAGER: Ben Grande <ben.grande.b@gmail.com>
+          GIT_EMAIL: ben.grande.b@gmail.com
       - uses: editorconfig-checker/action-editorconfig-checker@main
       - name: Run Editorconfig Checker
         run: |
           editorconfig-checker
           editorconfig-checker salt/dotfiles
       - name: Lint commit messages
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.before }}
+          HEAD: ${{ github.event.after }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
         run: |
-          if test "${{ github.event_name}}" = "pull_request"
+          if test "${EVENT}" = "pull_request"
           then
-            base="${{ github.event.pull_request.base.sha }}"
-            head="${{ github.event.pull_request.head.sha }}"
+            base="${PR_BASE}"
+            head="${PR_HEAD}"
           else
-            base="${{ github.event.before }}"
-            head="${{ github.event.after }}"
+            base="${BASE}"
+            head="${HEAD}"
           fi
           if test "${base}" = "${head}" || test -z "${base}"
           then
             gitlint --debug --commit "${head}"
           else
             gitlint --debug --commits "${base}..${head}"
+          fi
+      - name: Verify that commits have associated signatures
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.before }}
+          HEAD: ${{ github.event.after }}
+        run: |
+          if test "${EVENT}" = "pull_request"
+          then
+            exit 0
+          fi
+          base="${BASE}"
+          head="${HEAD}"
+          if test "${base}" = "${head}" || test -z "${base}"
+          then
+            scripts/commit-verify.sh "${head}"
+          else
+            scripts/commit-verify.sh $(git rev-list --reverse ${base}..${head})
           fi
